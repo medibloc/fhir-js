@@ -1,9 +1,121 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import { prettifiyObject } from './utils/prettifier';
+import { prettifiyObject as prettifyObject } from './utils/prettifier';
 import { convertObjectUsingModel } from './utils/converter';
 
 const sampleData = [
+  {
+    name: 'patient resource sample',
+    source: {
+      0: {
+        elapsedTime: '28',
+        status: 'OK',
+        errors: null,
+        message: null,
+        timestamp: '2019-10-31 20:33:06',
+        bodyType: 'ARRAY',
+        body: [
+          {
+            PATIENTNM: '김*희',
+            CELLPHONENO: '01011113333',
+            BIRTHDT: '19470821',
+            GENDER: 'M',
+            INHOSPITALYN: 'Y',
+            VEHICLENO: null,
+            ZIPCD: '03771',
+            ZIPCDTXT:
+              '서울 서대문구 북아현로 29 (북아현동, e편한세상신촌 3단지)',
+            ADDRESS: '301동',
+            ROADNAMECD: null,
+            BUILDINGCD: null,
+            BCODE: null,
+            JIBUNADDR: null,
+            JIBUNADDRENG: null,
+          },
+        ],
+      },
+    },
+    model: {
+      resourceType: {
+        to: {
+          parents: ['0', 'resourceType'],
+          value: 'patient',
+        },
+      },
+      'name.use': {
+        to: { parents: ['0', 'name', 0, 'use'], value: 'official' },
+      },
+      'name.text': {
+        from: {
+          parents: ['0', 'body', 0, 'PATIENTNM'],
+        },
+        to: {
+          parents: ['0', 'name', 0, 'text'],
+        },
+      },
+      'telecom.system': {
+        to: { parents: ['0', 'telecom', 0, 'phone'], value: 'phone' },
+      },
+      'telecom.value': {
+        from: { parents: ['0', 'body', 0, 'CELLPHONENO'] },
+        to: {
+          parents: ['0', 'telecom', 0, 'value'],
+          valueReplace: {
+            searchValue: '(...)(....)(....)',
+            newValue: '$1-$2-$3',
+          },
+        },
+      },
+      'telecom.use': {
+        to: { parents: ['0', 'telecom', 0, 'use'], value: 'mobile' },
+      },
+      gender: {
+        from: { parents: ['0', 'body', 0, 'GENDER'] },
+        to: {
+          parents: ['0', 'gender'],
+          valueTable: { M: 'male', F: 'female' },
+        },
+      },
+      birthDate: {
+        from: { parents: ['0', 'body', 0, 'BIRTHDT'] },
+        to: {
+          parents: ['0', 'birthDate'],
+        },
+      },
+      'address.use': {
+        to: {
+          parents: ['0', 'address', 0, 'use'],
+          value: 'home',
+        },
+      },
+      'address.type': {
+        to: {
+          parents: ['0', 'address', 0, 'type'],
+          value: 'postal',
+        },
+      },
+      'address.text': {
+        from: { parents: ['0', 'body', 0, 'ZIPCDTXT'] },
+
+        to: {
+          parents: ['0', 'address', 0, 'text'],
+        },
+      },
+      'address.postalCode': {
+        from: { parents: ['0', 'body', 0, 'ZIPCD'] },
+
+        to: {
+          parents: ['0', 'address', 0, 'postalCode'],
+        },
+      },
+      'address.country': {
+        to: {
+          parents: ['0', 'address', 0, 'country'],
+          value: 'KR',
+        },
+      },
+    },
+  },
   {
     name: 'Test Data 1',
     source: {
@@ -67,68 +179,6 @@ const sampleData = [
       },
     },
   },
-  {
-    name: 'patient resource sample',
-    source: {
-      0: {
-        elapsedTime: '28',
-        status: 'OK',
-        errors: null,
-        message: null,
-        timestamp: '2019-10-31 20:33:06',
-        bodyType: 'ARRAY',
-        body: [
-          {
-            PATIENTNM: '김*희',
-            // String(환자명) -> Patient.name
-            CELLPHONENO: '01011113333',
-            // String(휴대전화 번호) -> Patient.telecom
-            BIRTHDT: '19470821',
-            // String(생년월일; yyyyMMdd) -> Patient.birthDate
-            GENDER: 'M',
-            // String(성별; M,F) -> Patient.gender
-            INHOSPITALYN: 'Y',
-            // St ring(병원안 여부; Y,N) -> 제외
-            VEHICLENO: null,
-            // String(차량번호) -> 제외
-            ZIPCD: '03771',
-            // String(우편번호) -> Patient.address[0,1,2]
-            ZIPCDTXT:
-              '서울 서대문구 북아현로 29 (북아현동, e편한세상신촌 3단지)',
-            // String(우편번호 주소) -> Patient.address[0]
-            ADDRESS: '301동',
-            // String(주소) -> Patient.address[0]
-            ROADNAMECD: null,
-            // String(도로명코드) -> Patient.address[1]
-            BUILDINGCD: null,
-            // String(건물번호) -> Patient.address[1]
-            BCODE: null,
-            // String(법정동코드) -> Patient.address[2]
-            JIBUNADDR: null,
-            // String(지번주소) -> Patient.address[2]
-            JIBUNADDRENG: null,
-            // String(지번주소영문) -> Patient.address[2]
-          },
-        ],
-      },
-    },
-    model: {
-      resourceType: {
-        to: {
-          parents: ['0', 'resourceType'],
-          value: 'patient',
-        },
-      },
-      nameText: {
-        from: {
-          parents: ['0', 'body', 0, 'PATIENTNM'],
-        },
-        to: {
-          parents: ['0', 'name', 0, 'text'],
-        },
-      },
-    },
-  },
 ];
 
 function App() {
@@ -150,7 +200,7 @@ function App() {
     function () {
       try {
         setTargetText(
-          prettifiyObject(
+          prettifyObject(
             convertObjectUsingModel({
               source: JSON.parse(sourceText),
               model: JSON.parse(modelText),
@@ -163,8 +213,8 @@ function App() {
   );
 
   function copyText(sampleModelText: any, sampleSourceText: any) {
-    setModelText(sampleModelText);
-    setSourceText(sampleSourceText);
+    setModelText(prettifyObject(JSON.parse(sampleModelText)));
+    setSourceText(prettifyObject(JSON.parse(sampleSourceText)));
   }
 
   return (
@@ -218,12 +268,12 @@ function App() {
               <tr>
                 <td>
                   <textarea className="sampleMultipleText">
-                    {prettifiyObject(sampleModel)}
+                    {prettifyObject(sampleModel)}
                   </textarea>
                 </td>
                 <td>
                   <textarea className="sampleMultipleText">
-                    {prettifiyObject(sampleSource)}
+                    {prettifyObject(sampleSource)}
                   </textarea>
                 </td>
                 <td>

@@ -81,9 +81,30 @@ export function convertObjectUsingModel({
   for (const basicUnitOfModel of Object.values(modelForConvertingObject)) {
     const { from, to } = basicUnitOfModel;
 
-    const valueForTargetObject = from
+    let valueForTargetObject = from
       ? getValueFromObject(sourceObject, from.parents || from) // check
       : to.value;
+
+    if (to.valueTable && to.valueTable[valueForTargetObject]) {
+      valueForTargetObject = to.valueTable[valueForTargetObject];
+    }
+
+    if (to.valueReplace) {
+      valueForTargetObject = valueForTargetObject.replace(
+        //to.valueReplace.searchValue,
+        new RegExp(to.valueReplace.searchValue),
+        to.valueReplace.newValue
+      );
+      console.log(
+        valueForTargetObject,
+        valueForTargetObject.replace(
+          to.valueReplace.searchValue,
+          to.valueReplace.newValue
+        ),
+        to.valueReplace.searchValue,
+        to.valueReplace.newValue
+      );
+    }
 
     addValueToTargetObject({
       // check

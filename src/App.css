@@ -3,12 +3,19 @@ body {
   color: white;
 }
 
+table {
+  width: 100%;
+}
+/* .oneThirdWidth {
+  width: calc(100% / 3);
+} */
+
 .multipleText {
   background-color: black;
   color: white;
   font-size: large;
-  min-height: 300px;
-  min-width: 300px;
+  min-height: 800px;
+  width: 100%;
 }
 
 .sampleMultipleText {
@@ -16,5 +23,5 @@ body {
   color: white;
   font-size: large;
   min-height: 300px;
-  min-width: 300px;
+  width: 100%;
 }

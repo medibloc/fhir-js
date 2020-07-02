@@ -6,5 +6,10 @@ export interface BasicUnitOfModel {
   to: {
     parents: Array<any>;
     value: string;
+    valueTable: any;
+    valueReplace: {
+      searchValue: any;
+      newValue: any;
+    };
   };
 }
